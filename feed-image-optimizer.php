@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: Feed Image Optimizer (Fixed)
- * Description: ASHX feed imajlarını WebP formatına dönüştürür, optimize eder ve öne çıkarılan görselleri günceller
- * Version: 3.0.2
+ * Plugin Name: Feed Image Optimizer (Fixed) - JPG Version
+ * Description: ASHX feed imajlarını JPG formatına dönüştürür, optimize eder ve öne çıkarılan görselleri günceller
+ * Version: 3.0.3
  * Author: Your Name
  * Text Domain: feed-image-optimizer
  */
@@ -15,10 +15,10 @@ if (!defined('ABSPATH')) {
 // Plugin sabitleri
 define('FIO_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('FIO_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('FIO_VERSION', '3.0.2');
+define('FIO_VERSION', '3.0.3');
 
 /**
- * Ana Plugin Sınıfı - Düzeltilmiş Versiyon
+ * Ana Plugin Sınıfı - JPG Dönüştürme Versiyonu
  */
 class FeedImageOptimizerMain {
     
