@@ -1,6 +1,6 @@
 <?php
 /**
- * Görsel İşleyici
+ * Görsel İşleyici - JPG Version
  * 
  * Görsel optimizasyonu ve dönüştürme işlemlerini yönetir
  * Single Responsibility: Sadece görsel işleme
@@ -59,7 +59,7 @@ class FIO_Image_Processor {
                 return false;
             }
             
-            // Cache'e kaydet
+            // Cache'e kaydet (JPG formatında)
             $cache_file = $this->cache_manager->save_to_cache($processed_image['resource'], $url, $device);
             imagedestroy($processed_image['resource']);
             
@@ -116,7 +116,7 @@ class FIO_Image_Processor {
             'timeout' => 45,
             'user-agent' => 'Mozilla/5.0 (compatible; WordPress Feed Image Optimizer)',
             'headers' => array(
-                'Accept' => 'image/webp,image/apng,image/*,*/*;q=0.8',
+                'Accept' => 'image/jpeg,image/jpg,image/png,image/*,*/*;q=0.8',  // JPG öncelikli accept header
             ),
             'sslverify' => false
         );
@@ -181,9 +181,9 @@ class FIO_Image_Processor {
                 return false;
             }
             
-            // Transparency için
-            imagealphablending($resized_image, false);
-            imagesavealpha($resized_image, true);
+            // JPG için beyaz background (transparency olmadığı için)
+            $white = imagecolorallocate($resized_image, 255, 255, 255);
+            imagefill($resized_image, 0, 0, $white);
             
             if (!imagecopyresampled($resized_image, $image, 0, 0, 0, 0, $new_width, $new_height, $width, $height)) {
                 imagedestroy($image);
@@ -226,7 +226,8 @@ class FIO_Image_Processor {
     private function format_response($optimized_data, $original_size, $cached = false, $optimized_size = null, $device = null) {
         $response = array(
             'optimized_url' => $optimized_data['optimized_url'],
-            'cached' => $cached
+            'cached' => $cached,
+            'format' => 'jpg'  // Format bilgisi eklendi
         );
         
         if ($cached) {
@@ -265,7 +266,7 @@ class FIO_Image_Processor {
     }
     
     /**
-     * WordPress attachment oluşturur
+     * WordPress attachment oluşturur - JPG için
      */
     public function create_attachment_from_optimized($optimized_data, $post_id) {
         $optimized_url = $optimized_data['optimized_url'];
@@ -293,8 +294,8 @@ class FIO_Image_Processor {
         // Attachment data hazırla
         $attachment = array(
             'guid' => $upload_dir['url'] . '/' . $new_filename,
-            'post_mime_type' => 'image/webp',
-            'post_title' => 'Optimized Featured Image',
+            'post_mime_type' => 'image/jpeg',  // MIME type JPG olarak güncellendi
+            'post_title' => 'Optimized Featured Image (JPG)',
             'post_content' => '',
             'post_status' => 'inherit',
             'post_parent' => $post_id
@@ -314,7 +315,7 @@ class FIO_Image_Processor {
         $attachment_data = wp_generate_attachment_metadata($attachment_id, $new_file_path);
         wp_update_attachment_metadata($attachment_id, $attachment_data);
         
-        $this->log_info("Created attachment $attachment_id for post $post_id");
+        $this->log_info("Created JPG attachment $attachment_id for post $post_id");
         return $attachment_id;
     }
     
@@ -324,7 +325,7 @@ class FIO_Image_Processor {
     public function check_system_requirements() {
         return array(
             'gd_extension' => extension_loaded('gd'),
-            'webp_support' => function_exists('imagewebp'),
+            'jpeg_support' => function_exists('imagejpeg'),  // JPEG desteği kontrol et
             'memory_limit' => ini_get('memory_limit'),
             'max_execution_time' => ini_get('max_execution_time'),
             'upload_max_filesize' => ini_get('upload_max_filesize'),
