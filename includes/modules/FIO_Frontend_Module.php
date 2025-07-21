@@ -1,6 +1,6 @@
 <?php
 /**
- * Frontend Modülü
+ * Frontend Modülü - JPG Version
  * 
  * Site ön yüzü ile ilgili işlemleri yönetir
  * Single Responsibility: Sadece frontend işlemleri
@@ -71,7 +71,7 @@ class FIO_Frontend_Module implements FIO_Module_Interface {
     }
     
     /**
-     * Shortcode handler
+     * Shortcode handler - JPG için güncellenmiş
      */
     public function handle_shortcode($atts) {
         $atts = shortcode_atts(array(
@@ -88,7 +88,7 @@ class FIO_Frontend_Module implements FIO_Module_Interface {
             return '';
         }
         
-        // URL'yi optimize et
+        // URL'yi JPG formatında optimize et
         $optimized = $this->image_processor->optimize_image($atts['url'], $atts['device']);
         
         // Optimizasyon başarısızsa orijinal URL'yi kullan
@@ -124,6 +124,12 @@ class FIO_Frontend_Module implements FIO_Module_Interface {
             }
         }
         
+        // JPG formatı için data attribute ekle
+        if ($optimized && isset($optimized['format']) && $optimized['format'] === 'jpg') {
+            $attributes['data-format'] = 'jpg';
+            $attributes['data-optimized'] = 'true';
+        }
+        
         // HTML oluştur
         $html = '<img';
         foreach ($attributes as $key => $value) {
@@ -148,24 +154,27 @@ class FIO_Frontend_Module implements FIO_Module_Interface {
         $result = $this->image_processor->optimize_image($url, $device);
         
         if ($result) {
+            // JPG formatı bilgisini ekle
+            $result['format'] = 'jpg';
+            $result['description'] = 'ASHX görüntüsü JPG formatına dönüştürülmüştür';
             wp_die(json_encode(array('success' => true, 'data' => $result)));
         } else {
-            wp_die(json_encode(array('success' => false, 'message' => 'Optimizasyon başarısız')));
+            wp_die(json_encode(array('success' => false, 'message' => 'JPG dönüştürme başarısız')));
         }
     }
     
     /**
-     * İçerikteki görselleri otomatik optimize eder
+     * İçerikteki ASHX görsellerini otomatik JPG'ye dönüştürür
      */
     public function filter_content_images($content) {
-        // ASHX görsellerini bul ve değiştir
+        // ASHX görsellerini bul ve JPG'ye dönüştür
         $pattern = '/<img[^>]*src=["\']([^"\']*\.ashx[^"\']*)["\'][^>]*>/i';
         
         return preg_replace_callback($pattern, function($matches) {
             $full_img_tag = $matches[0];
             $image_url = $matches[1];
             
-            // Optimize et
+            // JPG formatında optimize et
             $optimized = $this->image_processor->optimize_image($image_url);
             
             if ($optimized && isset($optimized['optimized_url'])) {
@@ -176,6 +185,9 @@ class FIO_Frontend_Module implements FIO_Module_Interface {
                 if ($this->settings->is_lazy_loading_enabled() && strpos($new_img_tag, 'loading=') === false) {
                     $new_img_tag = str_replace('<img', '<img loading="lazy"', $new_img_tag);
                 }
+                
+                // JPG formatı için data attribute ekle
+                $new_img_tag = str_replace('<img', '<img data-format="jpg" data-optimized="true"', $new_img_tag);
                 
                 return $new_img_tag;
             }
@@ -210,7 +222,7 @@ class FIO_Frontend_Module implements FIO_Module_Interface {
     }
     
     /**
-     * REST API optimize callback
+     * REST API optimize callback - JPG için
      */
     public function rest_optimize_image($request) {
         $url = $request->get_param('url');
@@ -219,19 +231,21 @@ class FIO_Frontend_Module implements FIO_Module_Interface {
         $result = $this->image_processor->optimize_image($url, $device);
         
         if ($result) {
+            $result['format'] = 'jpg';
+            $result['api_version'] = '1.0';
             return new WP_REST_Response($result, 200);
         } else {
-            return new WP_Error('optimization_failed', 'Görsel optimizasyonu başarısız', array('status' => 400));
+            return new WP_Error('optimization_failed', 'ASHX görüntüsü JPG formatına dönüştürülemedi', array('status' => 400));
         }
     }
     
     /**
-     * Template fonksiyonları için helper
+     * Template fonksiyonları için helper - JPG versiyonu
      */
     public function get_optimized_image_html($url, $args = array()) {
         $defaults = array(
             'alt' => '',
-            'class' => 'optimized-image',
+            'class' => 'optimized-image-jpg',
             'device' => 'auto',
             'lazy' => true
         );
@@ -254,5 +268,19 @@ class FIO_Frontend_Module implements FIO_Module_Interface {
         }
         
         return $this->handle_shortcode($shortcode_atts);
+    }
+    
+    /**
+     * JavaScript helper fonksiyonları için data sağla
+     */
+    public function get_frontend_config() {
+        return array(
+            'format' => 'jpg',
+            'lazy_loading' => $this->settings->is_lazy_loading_enabled(),
+            'auto_convert' => $this->settings->is_auto_convert_enabled(),
+            'quality' => $this->settings->get_jpeg_quality(),
+            'mobile_width' => $this->settings->get_mobile_width(),
+            'tablet_width' => $this->settings->get_tablet_width()
+        );
     }
 }
