@@ -1,6 +1,6 @@
 <?php
 /**
- * Ayarlar Sınıfı
+ * Ayarlar Sınıfı - JPG Version
  * 
  * Tüm plugin ayarlarını yönetir
  * Single Responsibility: Sadece ayar yönetimi
@@ -15,7 +15,7 @@ class FIO_Settings {
     use FIO_Logger_Trait;
     
     private $default_settings = array(
-        'fio_webp_quality' => 80,
+        'fio_jpeg_quality' => 85,  // JPG için varsayılan kalite biraz daha yüksek
         'fio_mobile_width' => 480,
         'fio_tablet_width' => 768,
         'fio_cache_days' => 30,
@@ -51,14 +51,23 @@ class FIO_Settings {
                 add_option($key, $value);
             }
         }
+        
+        // Eski WebP ayarını JPEG'e migrate et (backward compatibility)
+        $old_webp_quality = get_option('fio_webp_quality');
+        if ($old_webp_quality !== false && get_option('fio_jpeg_quality') === false) {
+            update_option('fio_jpeg_quality', $old_webp_quality);
+            delete_option('fio_webp_quality'); // Eski ayarı sil
+            $this->log_info('Migrated WebP quality setting to JPEG quality');
+        }
+        
         $this->log_info('Default settings initialized');
     }
     
     /**
-     * WebP kalitesi
+     * JPEG kalitesi
      */
-    public function get_webp_quality() {
-        return intval($this->get('fio_webp_quality'));
+    public function get_jpeg_quality() {
+        return intval($this->get('fio_jpeg_quality'));
     }
     
     /**
@@ -135,5 +144,13 @@ class FIO_Settings {
         foreach ($this->default_settings as $key => $default) {
             register_setting('feed_image_optimizer_settings', $key);
         }
+    }
+    
+    /**
+     * Backward compatibility için eski WebP metodları - deprecated
+     */
+    public function get_webp_quality() {
+        // Eski kod compatibility için JPEG kalitesini döndür
+        return $this->get_jpeg_quality();
     }
 }
