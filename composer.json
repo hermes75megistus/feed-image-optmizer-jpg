@@ -1,0 +1,13 @@
+{ 
+    "name": "yourname/feed-image-optimizer", 
+    "description": "WordPress plugin for optimizing ASHX feed images", 
+    "type": "wordpress-plugin", 
+    "require": { 
+        "php": "^7.4||^8.0" 
+    }, 
+    "autoload": { 
+        "psr-4": { 
+            "FIO\\": "includes/" 
+        } 
+    } 
+} 
