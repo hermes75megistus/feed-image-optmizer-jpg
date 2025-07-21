@@ -1,6 +1,6 @@
 <?php
 /**
- * Cache Yöneticisi
+ * Cache Yöneticisi - JPG Version
  * 
  * Optimize edilmiş imajların cache işlemlerini yönetir
  * Single Responsibility: Sadece cache işlemleri
@@ -43,7 +43,7 @@ class FIO_Cache_Manager {
         $htaccess_file = $this->cache_dir . '/.htaccess';
         if (!file_exists($htaccess_file)) {
             $htaccess_content = "Options -Indexes\n";
-            $htaccess_content .= "<FilesMatch \"\.(webp|jpg|jpeg|png)$\">\n";
+            $htaccess_content .= "<FilesMatch \"\.(jpg|jpeg|png)$\">\n";  // JPG formatları için güncellenmiş
             $htaccess_content .= "    Allow from all\n";
             $htaccess_content .= "</FilesMatch>\n";
             file_put_contents($htaccess_file, $htaccess_content);
@@ -53,20 +53,20 @@ class FIO_Cache_Manager {
     }
     
     /**
-     * Cache dosyası yolunu oluşturur
+     * Cache dosyası yolunu oluşturur - JPG formatında
      */
     public function get_cache_path($url, $device = 'auto') {
         $url_hash = md5($url . $device);
-        $file_extension = function_exists('imagewebp') ? '.webp' : '.jpg';
+        $file_extension = '.jpg';  // Her zaman JPG formatında kaydet
         return $this->cache_dir . '/' . $url_hash . $file_extension;
     }
     
     /**
-     * Cache URL'sini oluşturur
+     * Cache URL'sini oluşturur - JPG formatında
      */
     public function get_cache_url($url, $device = 'auto') {
         $url_hash = md5($url . $device);
-        $file_extension = function_exists('imagewebp') ? '.webp' : '.jpg';
+        $file_extension = '.jpg';  // Her zaman JPG formatında
         return $this->cache_url . '/' . $url_hash . $file_extension;
     }
     
@@ -113,11 +113,11 @@ class FIO_Cache_Manager {
     }
     
     /**
-     * Dosyayı cache'e kaydeder
+     * Dosyayı cache'e kaydeder - JPG formatında
      */
     public function save_to_cache($image_resource, $url, $device = 'auto') {
         $cache_file = $this->get_cache_path($url, $device);
-        $quality = $this->settings->get_webp_quality();
+        $quality = $this->settings->get_jpeg_quality();  // JPEG kalitesi
         
         // Cache dizini yoksa oluştur
         if (!$this->create_directories()) {
@@ -127,15 +127,11 @@ class FIO_Cache_Manager {
         $result = false;
         
         try {
-            // WebP veya JPEG formatında kaydet
-            if (function_exists('imagewebp') && strpos($cache_file, '.webp') !== false) {
-                $result = imagewebp($image_resource, $cache_file, $quality);
-            } else {
-                $result = imagejpeg($image_resource, $cache_file, $quality);
-            }
+            // Her zaman JPEG formatında kaydet
+            $result = imagejpeg($image_resource, $cache_file, $quality);
             
             if ($result && file_exists($cache_file)) {
-                $this->log_info("Image cached: $cache_file");
+                $this->log_info("Image cached as JPG: $cache_file");
                 return $cache_file;
             } else {
                 $this->log_error("Failed to save cache file: $cache_file");
