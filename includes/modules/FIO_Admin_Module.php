@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin Modülü - Tam ve Eksiksiz Versiyon
+ * Admin Modülü - JPG Version
  * 
  * Tüm admin panel işlemlerini yönetir
  * Single Responsibility: Sadece admin işlemleri
@@ -41,7 +41,7 @@ class FIO_Admin_Module implements FIO_Module_Interface {
      */
     public function add_admin_menu() {
         add_options_page(
-            'Feed Image Optimizer',
+            'Feed Image Optimizer (JPG)',
             'Image Optimizer',
             'manage_options',
             'feed-image-optimizer',
@@ -119,7 +119,11 @@ class FIO_Admin_Module implements FIO_Module_Interface {
     public function render_admin_page() {
         ?>
         <div class="wrap">
-            <h1>Feed Image Optimizer</h1>
+            <h1>Feed Image Optimizer - JPG Version</h1>
+            
+            <div class="notice notice-info">
+                <p><strong>Not:</strong> Bu plugin ASHX görsellerini optimize edilmiş JPG formatına dönüştürür.</p>
+            </div>
             
             <?php settings_errors(); ?>
             
@@ -132,7 +136,7 @@ class FIO_Admin_Module implements FIO_Module_Interface {
                     <button id="test-ajax" class="button">AJAX'ı Test Et</button>
                     <div id="ajax-test-result"></div>
                     
-                    <h3>Görsel Optimizasyonu Testi</h3>
+                    <h3>JPG Dönüştürme Testi</h3>
                     <table class="form-table">
                         <tr>
                             <th>Test URL:</th>
@@ -153,23 +157,23 @@ class FIO_Admin_Module implements FIO_Module_Interface {
                             </td>
                         </tr>
                     </table>
-                    <button id="test-optimize" class="button button-primary">Test Et</button>
+                    <button id="test-optimize" class="button button-primary">JPG'ye Dönüştür</button>
                     <div id="test-result"></div>
                 </div>
                 
                 <!-- Ayarlar Bölümü -->
                 <div class="fio-card">
-                    <h2>Ayarlar</h2>
+                    <h2>JPG Dönüştürme Ayarları</h2>
                     <form method="post" action="options.php">
                         <?php settings_fields('feed_image_optimizer_settings'); ?>
                         <table class="form-table">
                             <tr>
-                                <th scope="row">WebP Kalitesi</th>
+                                <th scope="row">JPG Kalitesi</th>
                                 <td>
-                                    <input type="number" name="fio_webp_quality" 
-                                           value="<?php echo esc_attr($this->settings->get_webp_quality()); ?>" 
+                                    <input type="number" name="fio_jpeg_quality" 
+                                           value="<?php echo esc_attr($this->settings->get_jpeg_quality()); ?>" 
                                            min="1" max="100" />
-                                    <p class="description">1-100 arası değer (80 önerilen)</p>
+                                    <p class="description">1-100 arası değer (85 önerilen, JPG için optimal)</p>
                                 </td>
                             </tr>
                             <tr>
@@ -209,7 +213,7 @@ class FIO_Admin_Module implements FIO_Module_Interface {
                                 <td>
                                     <input type="checkbox" name="fio_auto_convert" value="1" 
                                            <?php checked($this->settings->is_auto_convert_enabled()); ?> />
-                                    <label>Yeni yüklenen görseller otomatik optimize edilsin</label>
+                                    <label>Yeni yüklenen ASHX görselleri otomatik JPG'ye dönüştürülsün</label>
                                 </td>
                             </tr>
                             <tr>
@@ -217,17 +221,18 @@ class FIO_Admin_Module implements FIO_Module_Interface {
                                 <td>
                                     <input type="checkbox" name="fio_delete_original" value="1" 
                                            <?php checked($this->settings->should_delete_original()); ?> />
-                                    <label>Optimize edildikten sonra orijinal dosyalar silinsin</label>
+                                    <label>JPG'ye dönüştürüldükten sonra orijinal dosyalar silinsin</label>
                                 </td>
                             </tr>
                         </table>
-                        <?php submit_button(); ?>
+                        <?php submit_button('Ayarları Kaydet'); ?>
                     </form>
                 </div>
                 
                 <!-- Toplu Dönüştürme Bölümü -->
                 <div class="fio-card">
-                    <h2>Toplu Dönüştürme</h2>
+                    <h2>Toplu JPG Dönüştürme</h2>
+                    <p>Mevcut ASHX öne çıkarılan görselleri toplu olarak JPG formatına dönüştürür.</p>
                     
                     <table class="form-table">
                         <tr>
@@ -246,12 +251,12 @@ class FIO_Admin_Module implements FIO_Module_Interface {
                             <th>Sadece ASHX:</th>
                             <td>
                                 <input type="checkbox" id="ashx-only" checked />
-                                <label>Sadece ASHX görsellerini dönüştür</label>
+                                <label>Sadece ASHX görsellerini JPG'ye dönüştür</label>
                             </td>
                         </tr>
                     </table>
                     
-                    <button id="start-conversion" class="button button-primary">Dönüştürmeyi Başlat</button>
+                    <button id="start-conversion" class="button button-primary">JPG Dönüştürmeyi Başlat</button>
                     <button id="stop-conversion" class="button button-secondary" style="display: none;">Durdur</button>
                     
                     <!-- Progress -->
@@ -269,7 +274,7 @@ class FIO_Admin_Module implements FIO_Module_Interface {
                     
                     <!-- Stats -->
                     <div id="conversion-stats" style="display: none; margin-top: 20px;">
-                        <h3>İstatistikler</h3>
+                        <h3>JPG Dönüştürme İstatistikleri</h3>
                         <ul>
                             <li>Toplam İşlenen: <span id="stats-total">0</span></li>
                             <li>Başarılı: <span id="stats-success">0</span></li>
@@ -287,7 +292,7 @@ class FIO_Admin_Module implements FIO_Module_Interface {
                     
                     <!-- Auto Converter İstatistikleri -->
                     <?php if ($this->settings->is_auto_convert_enabled()): ?>
-                        <h3>Otomatik Dönüştürme İstatistikleri</h3>
+                        <h3>Otomatik JPG Dönüştürme İstatistikleri</h3>
                         <?php
                         try {
                             $plugin = FeedImageOptimizerMain::get_instance();
@@ -298,11 +303,11 @@ class FIO_Admin_Module implements FIO_Module_Interface {
                                 ?>
                                 <table class="widefat">
                                     <tr>
-                                        <td>Optimize Edilmiş Postlar</td>
+                                        <td>JPG'ye Dönüştürülmüş Postlar</td>
                                         <td><?php echo esc_html($stats['optimized_posts']); ?></td>
                                     </tr>
                                     <tr>
-                                        <td>Optimize Edilmiş Attachmentlar</td>
+                                        <td>JPG'ye Dönüştürülmüş Attachmentlar</td>
                                         <td><?php echo esc_html($stats['optimized_attachments']); ?></td>
                                     </tr>
                                     <tr>
@@ -329,15 +334,15 @@ class FIO_Admin_Module implements FIO_Module_Interface {
                                 <?php endif; ?>
                                 
                                 <h4>Debug İşlemleri:</h4>
-                                <button type="button" class="button" onclick="resetOptimizationFlags()">Optimizasyon İşaretlerini Sıfırla</button>
+                                <button type="button" class="button" onclick="resetOptimizationFlags()">Dönüştürme İşaretlerini Sıfırla</button>
                                 <script>
                                 function resetOptimizationFlags() {
-                                    if (confirm('Tüm optimizasyon işaretlerini sıfırlamak istediğinizden emin misiniz?\nBu işlem geri alınamaz ve tüm postlar tekrar otomatik optimize edilebilir hale gelir.')) {
+                                    if (confirm('Tüm JPG dönüştürme işaretlerini sıfırlamak istediğinizden emin misiniz?\nBu işlem geri alınamaz ve tüm postlar tekrar otomatik dönüştürülebilir hale gelir.')) {
                                         jQuery.post(ajaxurl, {
                                             action: 'fio_reset_optimization_flags',
                                             nonce: '<?php echo wp_create_nonce('fio_reset_flags'); ?>'
                                         }).done(function(response) {
-                                            alert('Optimizasyon işaretleri sıfırlandı!');
+                                            alert('Dönüştürme işaretleri sıfırlandı!');
                                             location.reload();
                                         }).fail(function() {
                                             alert('Hata oluştu!');
@@ -358,7 +363,7 @@ class FIO_Admin_Module implements FIO_Module_Interface {
                     $conversion_status = get_option('fio_conversion_status', array());
                     if (!empty($conversion_status)):
                     ?>
-                        <h3>Toplu Dönüştürme Durumu</h3>
+                        <h3>Toplu JPG Dönüştürme Durumu</h3>
                         <table class="widefat">
                             <tr>
                                 <td>Durum</td>
@@ -397,7 +402,7 @@ class FIO_Admin_Module implements FIO_Module_Interface {
                     <h3>İşlemler</h3>
                     <button id="clear-status" class="button">Dönüştürme Durumunu Temizle</button>
                     <button id="clear-cron" class="button">Cron Job'ları Temizle</button>
-                    <button id="clear-cache" class="button">Cache'i Temizle</button>
+                    <button id="clear-cache" class="button">JPG Cache'i Temizle</button>
                     
                     <!-- Log Viewer -->
                     <h3>Son Log Kayıtları</h3>
@@ -425,7 +430,7 @@ class FIO_Admin_Module implements FIO_Module_Interface {
             } else {
                 $requirements = array(
                     'gd_extension' => extension_loaded('gd'),
-                    'webp_support' => function_exists('imagewebp'),
+                    'jpeg_support' => function_exists('imagejpeg'),  // JPEG desteği kontrol et
                     'memory_limit' => ini_get('memory_limit'),
                     'max_execution_time' => ini_get('max_execution_time')
                 );
@@ -437,15 +442,15 @@ class FIO_Admin_Module implements FIO_Module_Interface {
         
         if (!empty($requirements)) {
             ?>
-            <h3>Sistem Durumu</h3>
+            <h3>JPG Dönüştürme Sistem Durumu</h3>
             <table class="widefat">
                 <tr>
                     <td>GD Extension</td>
                     <td><?php echo $requirements['gd_extension'] ? '✓ Aktif' : '✗ Aktif değil'; ?></td>
                 </tr>
                 <tr>
-                    <td>WebP Desteği</td>
-                    <td><?php echo $requirements['webp_support'] ? '✓ Destekleniyor' : '✗ Desteklenmiyor'; ?></td>
+                    <td>JPEG Desteği</td>
+                    <td><?php echo $requirements['jpeg_support'] ? '✓ Destekleniyor' : '✗ Desteklenmiyor'; ?></td>
                 </tr>
                 <tr>
                     <td>Memory Limit</td>
@@ -480,10 +485,10 @@ class FIO_Admin_Module implements FIO_Module_Interface {
             $cache_manager = new FIO_Cache_Manager($this->settings);
             $cache_stats = $cache_manager->get_cache_stats();
             ?>
-            <h3>Cache İstatistikleri</h3>
+            <h3>JPG Cache İstatistikleri</h3>
             <table class="widefat">
                 <tr>
-                    <td>Dosya Sayısı</td>
+                    <td>JPG Dosya Sayısı</td>
                     <td><?php echo esc_html($cache_stats['file_count']); ?></td>
                 </tr>
                 <tr>
